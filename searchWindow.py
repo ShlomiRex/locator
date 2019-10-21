@@ -69,6 +69,24 @@ class ListBoxWindow(Gtk.Window):
         box_outer.pack_start(listbox_2, True, True, 0)
         listbox_2.show_all()
 
+def show2():
+    
+    builder = Gtk.Builder()
+    builder.add_from_file("SearchWindow.glade")
+    window = builder.get_object("SearchWindow")
+    box_outer = builder.get_object("GtkBox")
+
+    listbox_2 = Gtk.ListBox()
+    items = 'This is a sorted ListBox Fail'.split()
+
+    for item in items:
+        listbox_2.add(ListBoxRowWithData(item))
+
+    box_outer.pack_start(listbox_2, True, True, 0)
+    #builder.connect_signals(Handler())
+    #window.connect("destroy", Gtk.main_quit)
+    window.show_all()
+    Gtk.main()
 
 def show():
     win = ListBoxWindow()
@@ -78,4 +96,4 @@ def show():
 
 
 if __name__ == "__main__":
-    show()
+    show2()

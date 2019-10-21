@@ -1,0 +1,9 @@
+* When grep is finished read everything.
+* Each line -> Add to SearchWindow
+* When it is successful, we can go to use pipes (while searching we get results, instead of waiting for complete search - read below)
+
+
+When I have done that, continue with:
+* When searching, output each line to a pipe. (no stdout)
+* While searching, read the pipe, line by line. 
+* Each line will represent a single result of grep, so for each line, add it to SearchWindow.
