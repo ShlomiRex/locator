@@ -32,13 +32,9 @@ class Handler:
     def onSearch(self, button):
         search_str = builder.get_object("search_string").get_text()
         path_str = builder.get_object("folder_path").get_text()
-        print(spinner)
         spinner.start()
 
-        locator.locate_string(search_str, path_str)
-
-        print("Done")
-        spinner.stop()
+        searcher = locator.locate_string(search_str, path_str, spinner)
 
     def on_folder_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Please choose a folder", window,
@@ -57,6 +53,9 @@ class Handler:
             print("Cancel clicked")
 
         dialog.destroy()
+    
+    def stop_searching(self, widget):
+        self.searcher.stop()
 
 builder = Gtk.Builder()
 builder.add_from_file("glade.glade")
@@ -64,7 +63,6 @@ builder.connect_signals(Handler())
 
 window = builder.get_object("MainWindow")
 spinner = builder.get_object("spinner")
-print(spinner)
 
 window.connect("destroy", Gtk.main_quit)
 window.show_all()
