@@ -31,8 +31,8 @@ import pipes
 
 
 class Searcher(threading.Thread):
-    def __init__(self, string, path, spinner):
-        self.string, self.path, self.spinner = string, path, spinner
+    def __init__(self, string, path, callback):
+        self.string, self.path, self.callback = string, path, callback
 
         threading.Thread.__init__(self)
     
@@ -40,13 +40,12 @@ class Searcher(threading.Thread):
         #p = subprocess.Popen(["grep", "-rln", self.string, self.path],  shell=False, stdout=open("out.txt", "w"), stderr=open("err.txt", "w"))
         cmd = "grep -rn {} {}".format(self.string, self.path)
         self.p = subprocess.run(cmd,  shell=True)
-        self.spinner.stop()
-    
-    def stop():
-        self.p.kill()
+        print("Shell command finished")
+        # Finished running, call callback
+        self.callback()
 
-def locate_string(string, path, spinner = None):
-    myclass = Searcher(string, path, spinner)
+def locate_string(string, path, callback):
+    myclass = Searcher(string, path, callback)
     myclass.start()
     return myclass
 

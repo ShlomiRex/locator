@@ -27,21 +27,36 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
 import locator
+import time
 
 class Handler:
     def onSearch(self, button):
         search_str = builder.get_object("search_string").get_text()
         path_str = builder.get_object("folder_path").get_text()
-        spinner.start()
 
-        searcher = locator.locate_string(search_str, path_str, spinner)
+        stop_button.set_visible(True)
+        spinner.set_visible(True)
+        spinner.start()
+        
+        self.t1 = int(round(time.time() * 1000))
+        print("Searching...")
+        self.searcher = locator.locate_string(search_str, path_str, self.postSearch)
+    
+    def postSearch(self):
+        self.t2 = int(round(time.time() * 1000))
+        print(self.t2-self.t1)
+        print("Finished searching")
+        stop_button.set_visible(False)
+        spinner.stop()
+        spinner.set_visible(False)
+        
 
     def on_folder_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Please choose a folder", window,
             Gtk.FileChooserAction.SELECT_FOLDER,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              "Select", Gtk.ResponseType.OK))
-        dialog.set_default_size(800, 400)
+        #dialog.set_default_size(800, 400)
 
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
@@ -55,7 +70,9 @@ class Handler:
         dialog.destroy()
     
     def stop_searching(self, widget):
-        self.searcher.stop()
+
+        if self.searcher.isAlive():
+            self.searcher.stop()
 
 builder = Gtk.Builder()
 builder.add_from_file("glade.glade")
@@ -63,10 +80,10 @@ builder.connect_signals(Handler())
 
 window = builder.get_object("MainWindow")
 spinner = builder.get_object("spinner")
+stop_button = builder.get_object("btn_stop_search")
 
 window.connect("destroy", Gtk.main_quit)
-window.show_all()
-
+window.show()
 
 
 Gtk.main()
