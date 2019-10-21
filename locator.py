@@ -45,6 +45,7 @@ class Searcher(threading.Thread):
         self.callback()
 
 def locate_string(string, path, callback):
+    print("Searching...")
     myclass = Searcher(string, path, callback)
     myclass.start()
     return myclass

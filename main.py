@@ -28,6 +28,7 @@ from gi.repository import Gtk
 
 import locator
 import time
+import searchWindow
 
 class Handler:
     def onSearch(self, button):
@@ -37,9 +38,9 @@ class Handler:
         stop_button.set_visible(True)
         spinner.set_visible(True)
         spinner.start()
-
-        print("Searching...")
+        
         self.searcher = locator.locate_string(search_str, path_str, self.postSearch)
+        searchWindow.show()
     
     def postSearch(self):
         print("Finished searching")
@@ -67,9 +68,11 @@ class Handler:
         dialog.destroy()
     
     def stop_searching(self, button):
-
-        if self.searcher.isAlive():
-            self.searcher.stop()
+        print("onClicked_stopSearching")
+        stop_button.set_visible(False)
+        spinner.stop()
+        spinner.set_visible(False)
+        
 
 builder = Gtk.Builder()
 builder.add_from_file("MainWindow.glade")
@@ -83,9 +86,5 @@ window.show()
 spinner = builder.get_object("spinner")
 stop_button = builder.get_object("btn_stop_search")
 
-# Search window
-
-import searchWindow
-searchWindow.show()
 
 Gtk.main()
