@@ -35,33 +35,41 @@ import queue
 # Input: filenames from grep command
 # Output: None. Change GUI.
 class WorkerThread(threading.Thread):
-    def __init__(self, input_q, listbox, maxRows=50):
-        self.input_q, self.listbox, self.maxRows = input_q, listbox, maxRows
+    def __init__(self, input_q, listbox, finishedSearchingEvent, maxRows=50):
+        self.input_q, self.listbox, self.maxRows, self.finishedSearchingEvent = input_q, listbox, maxRows, finishedSearchingEvent
         self.stoprequest = threading.Event()
         threading.Thread.__init__(self)
 
     def run(self):
         i = 1
-        while not self.stoprequest.isSet():
+        # While GREP command is still running, keep reading!
+        while True:
             try:
+                if self.finishedSearchingEvent.isSet() and self.input_q.empty():
+                    print("GUI Thread stopped - GREP signal")
+                    break
+                else:
+                    print("No GREP signal")
+                # Maximum GUI elements!
                 if i == self.maxRows:
+                    print("GUI Thread stopped due to max GUI rows reached")
                     break
                 # If there is nothing in queue, after X seconds, skip. This allows for 'isAlive' check, if we need to gracefuly exit.
-                filename = self.input_q.get(True, 0.2)
+                filename = self.input_q.get(True, 0.5)
                 label = Gtk.Label(filename)
                 self.listbox.add(label)
                 label.show_all()
                 i = i + 1
             except queue.Empty:
                 continue
+        
     
     # Called externally. Gracefuly stop the task.
     def join(self, timeout=None):
         self.stoprequest.set()
         super(WorkerThread, self).join(timeout)
 
-
-def show(input_q):
+def windowThread(listbox):    
     builder = Gtk.Builder()
     builder.add_from_file("SearchWindow.glade")
     window = builder.get_object("SearchWindow")
@@ -83,10 +91,12 @@ def show(input_q):
     #builder.connect_signals(Handler())
     #window.connect("destroy", Gtk.main_quit)
     window.show_all()
-
-    thread = WorkerThread(input_q, listbox).start()
-
     Gtk.main()
 
-    return thread
-
+def show(input_q, finishedSearchingEvent):
+    listbox = None
+    # Start window thread
+    threading.Thread(target=windowThread, args=(listbox)).start()
+    
+    # Start thread
+    thread = WorkerThread(input_q, listbox, finishedSearchingEvent).start()

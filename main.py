@@ -30,6 +30,7 @@ import Search
 import time
 import queue
 import SearchWindow
+import threading
 
 class Handler:
     def onSearch(self, button):
@@ -44,21 +45,32 @@ class Handler:
         grep_output = queue.Queue()
 
         # grep_output will be filled by this worker
-        thread1 = Search.Searcher(search_str, path_str, self.postSearch, grep_output)
-        thread1.start()
-        
-        thread2 = SearchWindow.show(grep_output)
-        thread2.start()
-    
-    # When Search.search is finished running, gracefuly stop the SearchWindow thread (that is reading from the output)
-    def postSearch(self):
+        self.thread1 = Search.Searcher(search_str, path_str, grep_output)
+        self.thread1.start()
+
+        self.finishedSearchingEvent = threading.Event()
+
+        # GUI thread / Read from GREP
+        self.thread2 = SearchWindow.show(grep_output, self.finishedSearchingEvent)
+        self.thread2.start()
+
+        print("Now finishing")
+        while self.thread1.isAlive():
+            print("Thread1 alive")
+            time.sleep(1)
+        #self.thread1.join()
+        self.finishedSearchingEvent.set() # Trigger event
+        print("Event got triggered")
+        self.thread2.join()
+
         print("Finished searching")
+        print("GREP signal = " + self.grep)
 
         # GUI
         stop_button.set_visible(False)
         spinner.stop()
         spinner.set_visible(False)
-        
+    
 
     def on_folder_clicked(self, button):
         dialog = Gtk.FileChooserDialog("Please choose a folder", window,

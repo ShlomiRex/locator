@@ -32,8 +32,8 @@ import pipes
 
 # output_q - Save filenames in this container.
 class Searcher(threading.Thread):
-    def __init__(self, string, path, callback, output_q):
-        self.string, self.path, self.callback, self.output_q = string, path, callback, output_q
+    def __init__(self, string, path, output_q):
+        self.string, self.path, self.output_q = string, path, output_q
 
         threading.Thread.__init__(self)
     
@@ -48,10 +48,8 @@ class Searcher(threading.Thread):
             if not line or p.poll() != None:
                 break
             line_str = line.rstrip().decode("utf-8")  # Turn bytes into formatted string line.
-            print(line_str)
+            #print(line_str)
             # Queue the filename. (Output)
             self.output_q.put(line_str)
 
         print("Shell command finished")
-        # Finished running, call callback
-        self.callback()
