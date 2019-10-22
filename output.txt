@@ -1,0 +1,3 @@
+/home/shlomi/Desktop/locator/examples/pyqt_example.py:7:#locator.locate_string("Base", "/home/shlomi/Desktop/godot-master/")
+/home/shlomi/Desktop/locator/locator.py:60:    myclass = Searcher("Base", "/home/shlomi/Desktop/locator")
+Binary file /home/shlomi/Desktop/locator/__pycache__/locator.cpython-36.pyc matches

@@ -1,3 +1,39 @@
+====================================
+The day before...
+====================================
+* I need to seperate the Main Window and Search Window to 2 threads.
+* After that, I need to start another thread for reading the output of search thread. (Already implimented)
+* This thread will also affect the Search Window Thread by changing the GUI.
+* Overall we have:
+    * Main Thread (Which is also handling the Main Window) - 1 -
+    * Searcher Thread - 2 - located at SearchWindow.py - it will read from grep and the result is changing the GUI (which is in another thread - read next line)
+    * Search Window Thread - 3- it's sole purpose is to handle GUI for Search Window.
+* Firstly I need to test thread 1 and 2 only. Later we can add thread 3.
+* I need to find a way so that thread 2 can change the GUI of thread 3.
+
+
+====================================
+Bugs
+====================================
+* When finished searching, and closing both windows, the process is still running in the background.
+
+====================================
+To impliment
+====================================
+* Instead of GtkWindow for SearchWindow, use GtkScrolledWindow (Also checkout GtkVBox - it may be useful)
+* Recursive search checkbox - didn't implimented
+* Follow symbolic links checkbox - didn't implimented
+* Fix 'Maximum GUI Elements' in SearchWindow.py (Maximum allowed elements in list)
+
+====================================
+In the future
+====================================
+* Add 'search for installed packages' for newbies to linux finding spesific libraries.
+* Checkboxes for 'Match case' / 'Case match'
+
+====================================
+Personal Comments
+====================================
 * When grep is finished read everything.
 * Each line -> Add to SearchWindow
 * When it is successful, we can go to use pipes (while searching we get results, instead of waiting for complete search - read below)

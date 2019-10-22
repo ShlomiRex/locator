@@ -30,30 +30,26 @@ import time
 import pipes
 
 
+# output_q - Save filenames in this container.
 class Searcher(threading.Thread):
-    def __init__(self, string, path, callback):
-        self.string, self.path, self.callback = string, path, callback
+    def __init__(self, string, path, output_q):
+        self.string, self.path, self.output_q = string, path, output_q
 
         threading.Thread.__init__(self)
     
     def run(self):
-        #p = subprocess.Popen(["grep", "-rln", self.string, self.path],  shell=False, stdout=open("out.txt", "w"), stderr=open("err.txt", "w"))
-        cmd = "grep -rn {} {}".format(self.string, self.path)
-        self.p = subprocess.run(cmd,  shell=True)
+        print("Searching...")
+        cmd = "grep -rnIh {} {}".format(self.string, self.path)
+        # Create process in diffirent thread.
+        p = subprocess.Popen(cmd, stdout= subprocess.PIPE, shell=True)
+        # Keep reading output of p. If finished, check if p is dead. If not, keep reading, if yes, terminate.
+        while True:
+            line = p.stdout.readline()
+            if not line or p.poll() != None:
+                break
+            line_str = line.rstrip().decode("utf-8")  # Turn bytes into formatted string line.
+            #print(line_str)
+            # Queue the filename. (Output)
+            self.output_q.put(line_str)
+
         print("Shell command finished")
-        # Finished running, call callback
-        self.callback()
-
-def locate_string(string, path, callback):
-    print("Searching...")
-    myclass = Searcher(string, path, callback)
-    myclass.start()
-    return myclass
-
-
-
-
-if __name__ == '__main__':
-    myclass = Searcher("Base", "/home/shlomi/Desktop/locator")
-    myclass.start()
-    myclass.join()

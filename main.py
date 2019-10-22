@@ -26,9 +26,11 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-import locator
+import Search
 import time
-import searchWindow
+import queue
+import SearchWindow
+import threading
 
 class Handler:
     def onSearch(self, button):
@@ -39,15 +41,36 @@ class Handler:
         spinner.set_visible(True)
         spinner.start()
         
-        self.searcher = locator.locate_string(search_str, path_str, self.postSearch)
-        searchWindow.show()
-    
-    def postSearch(self):
+        # Create 'shared memory' for both threads, allowing communication (in this case, Searcher -> outputs -> input of SearchWindow)
+        grep_output = queue.Queue()
+
+        # grep_output will be filled by this worker
+        self.thread1 = Search.Searcher(search_str, path_str, grep_output)
+        self.thread1.start()
+
+        self.finishedSearchingEvent = threading.Event()
+
+        # GUI thread / Read from GREP
+        self.thread2 = SearchWindow.show(grep_output, self.finishedSearchingEvent)
+        self.thread2.start()
+
+        print("Now finishing")
+        while self.thread1.isAlive():
+            print("Thread1 alive")
+            time.sleep(1)
+        #self.thread1.join()
+        self.finishedSearchingEvent.set() # Trigger event
+        print("Event got triggered")
+        self.thread2.join()
+
         print("Finished searching")
+        print("GREP signal = " + self.grep)
+
+        # GUI
         stop_button.set_visible(False)
         spinner.stop()
         spinner.set_visible(False)
-        
+    
 
     def on_folder_clicked(self, button):
         dialog = Gtk.FileChooserDialog("Please choose a folder", window,
@@ -73,7 +96,7 @@ class Handler:
         spinner.stop()
         spinner.set_visible(False)
         
-
+# Build PyGObject from glade
 builder = Gtk.Builder()
 builder.add_from_file("MainWindow.glade")
 builder.connect_signals(Handler())
