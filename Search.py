@@ -38,10 +38,8 @@ class Searcher(threading.Thread):
         threading.Thread.__init__(self)
     
     def run(self):
-        #p = subprocess.Popen(["grep", "-rln", self.string, self.path],  shell=False, stdout=open("out.txt", "w"), stderr=open("err.txt", "w"))
+        print("Searching...")
         cmd = "grep -rnIh {} {}".format(self.string, self.path)
-        #p = subprocess.check_output(cmd,  shell=True)
-
         # Create process in diffirent thread.
         p = subprocess.Popen(cmd, stdout= subprocess.PIPE, shell=True)
         # Keep reading output of p. If finished, check if p is dead. If not, keep reading, if yes, terminate.
@@ -50,23 +48,10 @@ class Searcher(threading.Thread):
             if not line or p.poll() != None:
                 break
             line_str = line.rstrip().decode("utf-8")  # Turn bytes into formatted string line.
-            #print("Line {} = {}".format(i,line_str))
+            print(line_str)
+            # Queue the filename. (Output)
             self.output_q.put(line_str)
 
         print("Shell command finished")
         # Finished running, call callback
         self.callback()
-
-def locate_string(string, path, callback, output_q):
-    print("Searching...")
-    myclass = Searcher(string, path, callback, output_q)
-    myclass.start()
-    return myclass
-
-
-
-
-if __name__ == '__main__':
-    myclass = Searcher("Base", "/home/shlomi/Desktop/locator")
-    myclass.start()
-    myclass.join()

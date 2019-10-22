@@ -26,12 +26,10 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-import locator
+import Search
 import time
 import queue
 import SearchWindow
-
-filenames_q = None
 
 class Handler:
     def onSearch(self, button):
@@ -42,12 +40,21 @@ class Handler:
         spinner.set_visible(True)
         spinner.start()
         
+        # Create 'shared memory' for both threads, allowing communication (in this case, Searcher -> outputs -> input of SearchWindow)
         grep_output = queue.Queue()
-        self.searcher = locator.locate_string(search_str, path_str, self.postSearch, grep_output)
-        SearchWindow.show(grep_output)
+
+        # grep_output will be filled by this worker
+        thread1 = Search.Searcher(search_str, path_str, self.postSearch, grep_output)
+        thread1.start()
+        
+        thread2 = SearchWindow.show(grep_output)
+        thread2.start()
     
+    # When Search.search is finished running, gracefuly stop the SearchWindow thread (that is reading from the output)
     def postSearch(self):
         print("Finished searching")
+
+        # GUI
         stop_button.set_visible(False)
         spinner.stop()
         spinner.set_visible(False)

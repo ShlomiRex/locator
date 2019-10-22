@@ -35,8 +35,8 @@ import queue
 # Input: filenames from grep command
 # Output: None. Change GUI.
 class WorkerThread(threading.Thread):
-    def __init__(self, input_q, listbox, box_outer):
-        self.input_q, self.listbox, self.box_outer = input_q, listbox, box_outer
+    def __init__(self, input_q, listbox, maxRows=50):
+        self.input_q, self.listbox, self.maxRows = input_q, listbox, maxRows
         self.stoprequest = threading.Event()
         threading.Thread.__init__(self)
 
@@ -44,17 +44,14 @@ class WorkerThread(threading.Thread):
         i = 1
         while not self.stoprequest.isSet():
             try:
-                if i == 10:
+                if i == self.maxRows:
                     break
-                # If there is nothing in queue, after X seconds, skip.
-                filenames = self.input_q.get(True, 0.2)
-                print("line {} ={}".format(i,filenames))
-                label = Gtk.Label(filenames)
+                # If there is nothing in queue, after X seconds, skip. This allows for 'isAlive' check, if we need to gracefuly exit.
+                filename = self.input_q.get(True, 0.2)
+                label = Gtk.Label(filename)
                 self.listbox.add(label)
                 label.show_all()
                 i = i + 1
-                time.sleep(1)
-                # self.output_q.put((self.name, dirname, filenames))
             except queue.Empty:
                 continue
     
@@ -71,9 +68,6 @@ def show(input_q):
     box_outer = builder.get_object("GtkBox")
 
     listbox = Gtk.ListBox()
-    items = 'This is a sorted ListBox Fail'.split()
-
-
     #Do not delete these comments, it may be useful in the future
 
     # def sort_func(row_1, row_2, data, notify_destroy):
@@ -85,15 +79,14 @@ def show(input_q):
     # listbox.set_sort_func(sort_func, None, False)
     # listbox.set_filter_func(filter_func, None, False)
 
-
-    for item in items:
-        listbox.add(Gtk.Label(item))
-
     box_outer.pack_start(listbox, True, True, 0)
     #builder.connect_signals(Handler())
     #window.connect("destroy", Gtk.main_quit)
     window.show_all()
 
-    WorkerThread(input_q, listbox, box_outer).start()
+    thread = WorkerThread(input_q, listbox).start()
 
     Gtk.main()
+
+    return thread
+

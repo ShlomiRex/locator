@@ -1,3 +1,24 @@
+====================================
+Bugs
+====================================
+* When finished searching, and closing both windows, the process is still running in the background.
+
+====================================
+To impliment
+====================================
+* Instead of GtkWindow for SearchWindow, use GtkScrolledWindow (Also checkout GtkVBox - it may be useful)
+* Recursive search checkbox - didn't implimented
+* Follow symbolic links checkbox - didn't implimented
+
+====================================
+In the future
+====================================
+* Add 'search for installed packages' for newbies to linux finding spesific libraries.
+* Checkboxes for 'Match case' / 'Case match'
+
+====================================
+Personal Comments
+====================================
 * When grep is finished read everything.
 * Each line -> Add to SearchWindow
 * When it is successful, we can go to use pipes (while searching we get results, instead of waiting for complete search - read below)
@@ -7,15 +28,3 @@ When I have done that, continue with:
 * When searching, output each line to a pipe. (no stdout)
 * While searching, read the pipe, line by line. 
 * Each line will represent a single result of grep, so for each line, add it to SearchWindow.
-
-To impliment
-=========
-
-* Recursive search checkbox - didn't implimented
-* Follow symbolic links checkbox - didn't implimented
-
-In the future
-=========
-
-* Add 'search for installed packages' for newbies to linux finding spesific libraries.
-* Checkboxes for 'Match case' / 'Case match'
