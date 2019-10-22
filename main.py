@@ -28,7 +28,10 @@ from gi.repository import Gtk
 
 import locator
 import time
-import searchWindow
+import queue
+import SearchWindow
+
+filenames_q = None
 
 class Handler:
     def onSearch(self, button):
@@ -39,8 +42,9 @@ class Handler:
         spinner.set_visible(True)
         spinner.start()
         
-        self.searcher = locator.locate_string(search_str, path_str, self.postSearch)
-        searchWindow.show()
+        grep_output = queue.Queue()
+        self.searcher = locator.locate_string(search_str, path_str, self.postSearch, grep_output)
+        #searchWindow.show(filenames_q)
     
     def postSearch(self):
         print("Finished searching")
@@ -73,7 +77,7 @@ class Handler:
         spinner.stop()
         spinner.set_visible(False)
         
-
+# Build PyGObject from glade
 builder = Gtk.Builder()
 builder.add_from_file("MainWindow.glade")
 builder.connect_signals(Handler())

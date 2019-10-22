@@ -26,51 +26,37 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import time
 import threading
+import os
+import queue
 
-class ListBoxRowWithData(Gtk.ListBoxRow):
-    def __init__(self, data):
-        super(Gtk.ListBoxRow, self).__init__()
-        self.data = data
-        self.add(Gtk.Label(data))
 
-class ListBoxWindow(Gtk.Window):
+# Input: filenames from grep command
+# Output: None. Change GUI.
+class WorkerThread(threading.Thread):
+    def __init__(self, input_q):
+        self.input_q = input_q
+        self.stoprequest = threading.Event()
+        threading.Thread.__init__(self)
 
-    def __init__(self):
-        Gtk.Window.__init__(self, title="ListBox Demo")
-        box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        self.add(box_outer)
-
-        listbox = Gtk.ListBox()
-        #listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-
-        listbox_2 = Gtk.ListBox()
-        items = 'This is a sorted ListBox Fail'.split()
-
-        for item in items:
-            listbox_2.add(ListBoxRowWithData(item))
-
-        #Do not delete these comments, it may be useful in the future
-
-        # def sort_func(row_1, row_2, data, notify_destroy):
-        #     return row_1.data.lower() > row_2.data.lower()
-
-        # def filter_func(row, data, notify_destroy):
-        #     return False if row.data == 'Fail' else True
-
-        # listbox_2.set_sort_func(sort_func, None, False)
-        # listbox_2.set_filter_func(filter_func, None, False)
-
-        def on_row_activated(listbox_widget, row):
-            print(row.data)
-
-        listbox_2.connect('row-activated', on_row_activated)
-
-        box_outer.pack_start(listbox_2, True, True, 0)
-        listbox_2.show_all()
-
-def show2():
+    def run(self):
+        while not self.stoprequest.isSet():
+            try:
+                # If there is nothing in queue, after X seconds, skip.
+                filenames = self.input_q.get(True, 0.2)
+                print(filenames)
+                # self.output_q.put((self.name, dirname, filenames))
+            except Queue.Empty:
+                continue
     
+    # Called externally. Gracefuly stop the task.
+    def join(self, timeout=None):
+        self.stoprequest.set()
+        super(WorkerThread, self).join(timeout)
+
+
+def show(input_q):
     builder = Gtk.Builder()
     builder.add_from_file("SearchWindow.glade")
     window = builder.get_object("SearchWindow")
@@ -79,21 +65,27 @@ def show2():
     listbox_2 = Gtk.ListBox()
     items = 'This is a sorted ListBox Fail'.split()
 
+
+    #Do not delete these comments, it may be useful in the future
+
+    # def sort_func(row_1, row_2, data, notify_destroy):
+    #     return row_1.data.lower() > row_2.data.lower()
+
+    # def filter_func(row, data, notify_destroy):
+    #     return False if row.data == 'Fail' else True
+
+    # listbox_2.set_sort_func(sort_func, None, False)
+    # listbox_2.set_filter_func(filter_func, None, False)
+
+
     for item in items:
-        listbox_2.add(ListBoxRowWithData(item))
+        listbox_2.add(Gtk.Label(item))
 
     box_outer.pack_start(listbox_2, True, True, 0)
     #builder.connect_signals(Handler())
     #window.connect("destroy", Gtk.main_quit)
     window.show_all()
+
+    WorkerThread(input_q).start()
+
     Gtk.main()
-
-def show():
-    win = ListBoxWindow()
-    win.show_all()
-    Gtk.main()
-    #GUIThread().start()
-
-
-if __name__ == "__main__":
-    show2()

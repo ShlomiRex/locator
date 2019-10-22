@@ -30,23 +30,36 @@ import time
 import pipes
 
 
+# output_q - Save filenames in this container.
 class Searcher(threading.Thread):
-    def __init__(self, string, path, callback):
-        self.string, self.path, self.callback = string, path, callback
+    def __init__(self, string, path, callback, output_q):
+        self.string, self.path, self.callback, self.output_q = string, path, callback, output_q
 
         threading.Thread.__init__(self)
     
     def run(self):
         #p = subprocess.Popen(["grep", "-rln", self.string, self.path],  shell=False, stdout=open("out.txt", "w"), stderr=open("err.txt", "w"))
-        cmd = "grep -rn {} {}".format(self.string, self.path)
-        self.p = subprocess.run(cmd,  shell=True)
+        cmd = "grep -rnIh {} {}".format(self.string, self.path)
+        #p = subprocess.check_output(cmd,  shell=True)
+
+        # Create process in diffirent thread.
+        p = subprocess.Popen(cmd, stdout= subprocess.PIPE, shell=True)
+        # Keep reading output of p. If finished, check if p is dead. If not, keep reading, if yes, terminate.
+        while True:
+            line = p.stdout.readline()
+            if not line or p.poll() != None:
+                break
+            line_str = line.rstrip().decode("utf-8")  # Turn bytes into formatted string line.
+            #print("Line {} = {}".format(i,line_str))
+            self.output_q.put(line_str)
+
         print("Shell command finished")
         # Finished running, call callback
         self.callback()
 
-def locate_string(string, path, callback):
+def locate_string(string, path, callback, output_q):
     print("Searching...")
-    myclass = Searcher(string, path, callback)
+    myclass = Searcher(string, path, callback, output_q)
     myclass.start()
     return myclass
 
