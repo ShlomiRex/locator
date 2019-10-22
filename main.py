@@ -44,7 +44,7 @@ class Handler:
         
         grep_output = queue.Queue()
         self.searcher = locator.locate_string(search_str, path_str, self.postSearch, grep_output)
-        #searchWindow.show(filenames_q)
+        SearchWindow.show(grep_output)
     
     def postSearch(self):
         print("Finished searching")

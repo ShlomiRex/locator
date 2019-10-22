@@ -7,3 +7,15 @@ When I have done that, continue with:
 * When searching, output each line to a pipe. (no stdout)
 * While searching, read the pipe, line by line. 
 * Each line will represent a single result of grep, so for each line, add it to SearchWindow.
+
+To impliment
+=========
+
+* Recursive search checkbox - didn't implimented
+* Follow symbolic links checkbox - didn't implimented
+
+In the future
+=========
+
+* Add 'search for installed packages' for newbies to linux finding spesific libraries.
+* Checkboxes for 'Match case' / 'Case match'
