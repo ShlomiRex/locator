@@ -44,12 +44,16 @@ class WorkerThread(threading.Thread):
         i = 1
         while not self.stoprequest.isSet():
             try:
+                if i == 10:
+                    break
                 # If there is nothing in queue, after X seconds, skip.
                 filenames = self.input_q.get(True, 0.2)
                 print("line {} ={}".format(i,filenames))
-                self.listbox.add(Gtk.Label(filenames))
-                self.box_outer.pack_start(self.listbox, True, True, 0)
-                self.listbox.show_all()
+                label = Gtk.Label(filenames)
+                self.listbox.add(label)
+                label.show_all()
+                i = i + 1
+                time.sleep(1)
                 # self.output_q.put((self.name, dirname, filenames))
             except queue.Empty:
                 continue
