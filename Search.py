@@ -28,28 +28,39 @@ import subprocess
 import threading
 import time
 import pipes
+import logging
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='[%(levelname)s] (%(threadName)-10s) %(message)s',
+)
 
 # output_q - Save filenames in this container.
 class Searcher(threading.Thread):
-    def __init__(self, string, path, output_q):
-        self.string, self.path, self.output_q = string, path, output_q
+    def __init__(self, string, path, output_q, finishedSearchingEvent):
+        self.string, self.path, self.output_q, self.finishedSearchingEvent = string, path, output_q, finishedSearchingEvent
 
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name="SearcherThread")
     
     def run(self):
-        print("Searching...")
-        cmd = "grep -rnIh {} {}".format(self.string, self.path)
+        logging.debug("Searching...")
+        cmd = "grep -rIn {} {}".format(self.string, self.path)
         # Create process in diffirent thread.
         p = subprocess.Popen(cmd, stdout= subprocess.PIPE, shell=True)
-        # Keep reading output of p. If finished, check if p is dead. If not, keep reading, if yes, terminate.
-        while True:
-            line = p.stdout.readline()
-            if not line or p.poll() != None:
-                break
-            line_str = line.rstrip().decode("utf-8")  # Turn bytes into formatted string line.
-            #print(line_str)
-            # Queue the filename. (Output)
+        for line in p.stdout:
+            line_str = line.rstrip().decode("utf-8")
             self.output_q.put(line_str)
+        logging.debug("size = " + str(self.output_q.qsize()))
 
-        print("Shell command finished")
+        # Keep reading output of p. If finished, check if p is dead. If not, keep reading, if yes, terminate.
+        # while True:
+        #     line = p.stdout.readline()
+        #     if not line or p.poll() != None:
+        #         break
+        #     line_str = line.rstrip().decode("utf-8")  # Turn bytes into formatted string line.
+        #     # Queue the filename. (Output)
+        #     self.output_q.put(line_str)
+        #     logging.debug(line_str)
+
+        logging.debug("Shell command finished")
+        self.finishedSearchingEvent.set()

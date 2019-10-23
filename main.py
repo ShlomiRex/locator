@@ -50,29 +50,27 @@ class Handler:
         # Create 'shared memory' for both threads, allowing communication (in this case, Searcher -> outputs -> input of SearchWindow)
         grep_output = queue.Queue()
 
+        finishedSearchingEvent = threading.Event()
+
         # grep_output will be filled by this worker
-        self.thread1 = Search.Searcher(search_str, path_str, grep_output)
+        self.thread1 = Search.Searcher(search_str, path_str, grep_output, finishedSearchingEvent)
         self.thread1.start()
 
-        finishedSearchingEvent = threading.Event()
+        
 
         # GUI thread / Read from GREP
         self.thread2 = SearchWindow.WindowThread(grep_output, finishedSearchingEvent)
         self.thread2.start()
 
-        logging.debug("Waiting for thread 1 to join")
         self.thread1.join()
-        logging.debug("Thread1 joined")
-        finishedSearchingEvent.set() # Trigger event
         logging.debug("Finished searching")
-
-        print(self.thread2.isWorkerThreadAlive())
 
         # GUI
         stop_button.set_visible(False)
         spinner.stop()
         spinner.set_visible(False)
-    
+
+        print("=================================")
 
     def on_folder_clicked(self, button):
         dialog = Gtk.FileChooserDialog("Please choose a folder", window,
@@ -107,6 +105,9 @@ builder.connect_signals(Handler())
 window = builder.get_object("MainWindow")
 window.connect("destroy", Gtk.main_quit)
 window.show()
+
+builder.get_object("folder_path").set_text("/home/shlomi/Desktop/locator")
+builder.get_object("search_string").set_text("Base")
 
 spinner = builder.get_object("spinner")
 stop_button = builder.get_object("btn_stop_search")

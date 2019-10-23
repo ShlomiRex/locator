@@ -41,39 +41,28 @@ logging.basicConfig(
 class WorkerThread(threading.Thread):
     def __init__(self, input_q, listbox, finishedSearchingEvent, maxRows=50):
         self.input_q, self.listbox, self.maxRows, self.finishedSearchingEvent = input_q, listbox, maxRows, finishedSearchingEvent
-        self.stoprequest = threading.Event()
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name="WorkerThread")
 
     def run(self):
         logging.debug("WorkerThread started")
-        i = 1
         # While GREP command is still running, keep reading!
-        while not self.finishedSearchingEvent.isSet():
+        while True:
             try:
-                # Maximum GUI elements!
-                if i == self.maxRows:
-                    logging.debug("GUI Thread stopped due to max GUI rows reached")
-                    break
                 # If there is nothing in queue, after X seconds, skip. This allows for 'isAlive' check, if we need to gracefuly exit.
-                filename = self.input_q.get(True, 0.5)
+                filename = self.input_q.get(block=True, timeout=None)
+                logging.debug(filename)
                 label = Gtk.Label(filename)
                 self.listbox.add(label)
                 label.show_all()
-                i = i + 1
             except queue.Empty:
-                continue
+                if self.finishedSearchingEvent.isSet() :
+                    break
         logging.debug("WorkerThread finished")
-        
-    
-    # Called externally. Gracefuly stop the task.
-    def join(self, timeout=None):
-        self.stoprequest.set()
-        super(WorkerThread, self).join(timeout)
 
 class WindowThread(threading.Thread):
     def __init__(self, input_q, finishedSearchingEvent):
         self.input_q, self.finishedSearchingEvent = input_q, finishedSearchingEvent
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name="SearchWindowThread")
     def run(self):
         logging.debug("Initializing window")
         builder = Gtk.Builder()
@@ -101,6 +90,7 @@ class WindowThread(threading.Thread):
         self.thread = WorkerThread(self.input_q, listbox, self.finishedSearchingEvent, maxRows=100)
         self.thread.start()
 
+        logging.debug("Running window loop")
         Gtk.main()
     def isWorkerThreadAlive(self):
         return self.thread.isAlive()
