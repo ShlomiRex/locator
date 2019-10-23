@@ -31,6 +31,12 @@ import time
 import queue
 import SearchWindow
 import threading
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='[%(levelname)s] (%(threadName)-10s) %(message)s',
+)
 
 class Handler:
     def onSearch(self, button):
@@ -48,23 +54,19 @@ class Handler:
         self.thread1 = Search.Searcher(search_str, path_str, grep_output)
         self.thread1.start()
 
-        self.finishedSearchingEvent = threading.Event()
+        finishedSearchingEvent = threading.Event()
 
         # GUI thread / Read from GREP
-        self.thread2 = SearchWindow.show(grep_output, self.finishedSearchingEvent)
+        self.thread2 = SearchWindow.WindowThread(grep_output, finishedSearchingEvent)
         self.thread2.start()
 
-        print("Now finishing")
-        while self.thread1.isAlive():
-            print("Thread1 alive")
-            time.sleep(1)
-        #self.thread1.join()
-        self.finishedSearchingEvent.set() # Trigger event
-        print("Event got triggered")
-        self.thread2.join()
+        logging.debug("Waiting for thread 1 to join")
+        self.thread1.join()
+        logging.debug("Thread1 joined")
+        finishedSearchingEvent.set() # Trigger event
+        logging.debug("Finished searching")
 
-        print("Finished searching")
-        print("GREP signal = " + self.grep)
+        print(self.thread2.isWorkerThreadAlive())
 
         # GUI
         stop_button.set_visible(False)
