@@ -53,7 +53,7 @@ class Handler:
         finishedSearchingEvent = threading.Event()
 
         # grep_output will be filled by this worker
-        self.thread1 = Search.Searcher(search_str, path_str, grep_output, finishedSearchingEvent)
+        self.thread1 = Search.SearchThread(search_str, path_str, grep_output, finishedSearchingEvent)
         self.thread1.start()
 
         

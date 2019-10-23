@@ -71,19 +71,7 @@ class WindowThread(threading.Thread):
         box_outer = builder.get_object("GtkBox")
 
         listbox = Gtk.ListBox()
-        #Do not delete these comments, it may be useful in the future
-
-        # def sort_func(row_1, row_2, data, notify_destroy):
-        #     return row_1.data.lower() > row_2.data.lower()
-
-        # def filter_func(row, data, notify_destroy):
-        #     return False if row.data == 'Fail' else True
-
-        # listbox.set_sort_func(sort_func, None, False)
-        # listbox.set_filter_func(filter_func, None, False)
-
         box_outer.pack_start(listbox, True, True, 0)
-        #builder.connect_signals(Handler())
         window.connect("destroy", Gtk.main_quit)
         window.show_all()
 
