@@ -51,4 +51,4 @@ class SearchThread(threading.Thread):
             self.output_q.put(line_str)
         logging.debug("Shell command finished")
         self.finishedSearchingEvent.set()
-        logging.debug("SearchThread started")
+        logging.debug("Event set")

@@ -56,21 +56,20 @@ class Handler:
         self.thread1 = Search.SearchThread(search_str, path_str, grep_output, finishedSearchingEvent)
         self.thread1.start()
 
-        
-
         # GUI thread / Read from GREP
         self.thread2 = SearchWindow.WindowThread(grep_output, finishedSearchingEvent)
         self.thread2.start()
 
+        # Wait for thread 1 to join, don't block main thread
+        #self.thread3 = threading.Thread(target=self.waitForSearchToFinish(self), name="WaitForSearchFinish")
+        #self.thread3.start()
+    
+    def waitForSearchToFinish():
         self.thread1.join()
-        logging.debug("Finished searching")
-
         # GUI
         stop_button.set_visible(False)
         spinner.stop()
         spinner.set_visible(False)
-
-        print("=================================")
 
     def on_folder_clicked(self, button):
         dialog = Gtk.FileChooserDialog("Please choose a folder", window,

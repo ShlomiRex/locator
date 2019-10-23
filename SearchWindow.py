@@ -31,6 +31,7 @@ import threading
 import os
 import queue
 import logging
+import pdb
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -45,18 +46,24 @@ class WorkerThread(threading.Thread):
 
     def run(self):
         logging.debug("WorkerThread started")
+        i = 1
         # While GREP command is still running, keep reading!
         while True:
             try:
                 # If there is nothing in queue, after X seconds, skip. This allows for 'isAlive' check, if we need to gracefuly exit.
-                filename = self.input_q.get(block=True, timeout=None)
+                filename = self.input_q.get(block=True, timeout=0.2)
+
+                # If get returns 'None', throw queue.Empty exception
                 logging.debug(filename)
                 label = Gtk.Label(filename)
                 self.listbox.add(label)
                 label.show_all()
+                i = i + 1
             except queue.Empty:
-                if self.finishedSearchingEvent.isSet() :
+                if i == self.maxRows or self.finishedSearchingEvent.isSet() :
                     break
+                else:
+                    logging.debug("finishedSearchingEvent not set worker thread not stopping")
         logging.debug("WorkerThread finished")
 
 class WindowThread(threading.Thread):
@@ -70,10 +77,14 @@ class WindowThread(threading.Thread):
         window = builder.get_object("SearchWindow")
         box_outer = builder.get_object("GtkBox")
 
+        
+
         listbox = Gtk.ListBox()
-        box_outer.pack_start(listbox, True, True, 0)
+        #box_outer.pack_start(listbox, True, True, 0)
         window.connect("destroy", Gtk.main_quit)
-        window.show_all()
+        #logging.debug("Test")
+        pdb.set_trace()
+        window.show() # <<<<<<<<<<<<<<<<<<<<<<<<< Problem here
 
         self.thread = WorkerThread(self.input_q, listbox, self.finishedSearchingEvent, maxRows=100)
         self.thread.start()
